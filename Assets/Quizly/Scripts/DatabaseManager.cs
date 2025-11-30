@@ -125,7 +125,7 @@ namespace Quizly
             SendQuery(queryString);
         }
 
-        public static List<Question> SearchQuestions()
+        public static List<Question> SearchQuestions(Dictionary<string, string> columnValues = null)
         {
             List<Question> questions = new List<Question>();
             
@@ -135,7 +135,42 @@ namespace Quizly
             connection.Open();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = System.Data.CommandType.Text;
-            command.CommandText = $"SELECT * FROM {Table.Questions.ToString().ToLower()};";
+            command.CommandText = $"SELECT * FROM {Table.Questions.ToString().ToLower()}";
+
+            if (columnValues != null)
+            {
+                command.CommandText += " WHERE ";
+                
+                int i = 0;
+                
+                foreach (KeyValuePair<string, string> pair in columnValues)
+                {
+                    if (i > 0)
+                    {
+                        command.CommandText += " AND ";
+                    }
+
+                    command.CommandText += $"{pair.Key}";
+
+                    if (pair.Key == "question_text")
+                    {
+                        command.CommandText += $" LIKE '%{pair.Value}%'";
+                    }
+                    else
+                    {
+                        command.CommandText += $"= '{pair.Value}'";
+                    }
+                    
+                    i++;
+                }
+            } 
+            
+            command.CommandText += ";";
+            
+#if UNITY_EDITOR
+            Debug.Log(command.CommandText);
+#endif
+            
             SQLiteDataReader reader = command.ExecuteReader();
 
             while (reader.Read())
