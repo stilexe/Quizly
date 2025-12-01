@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Data.SQLite;
 using UnityEngine;
 
@@ -5,24 +6,59 @@ namespace Quizly
 {
     public static class UserManager
     {
-        public static void CreateUser(string username, string password)
+        private static User _loggedIn;
+        public delegate void UserLogin();
+        public static event UserLogin OnUserLogin;
+        
+        public delegate void UserLogout();
+        public static event UserLogout OnUserLogout;
+
+        public static User GetLoggedIn()
         {
+            return _loggedIn;
+        }
+
+        /// <summary>
+        /// Tries to login with the passed username and password. 
+        /// </summary>
+        /// <returns>True if able to login, false if not</returns>
+        public static bool TryLogin(string username, string password)
+        {
+            string dataPassword = DatabaseManager.ValuesQuery(DatabaseManager.Table.Users, "password", "username", new List<string>(){username})[0];
+
+            if (dataPassword == password)
+            {
+                _loggedIn = (User)DatabaseManager.FindMatching(DatabaseManager.Table.Users, "username", new List<string>(){username})[0];
+                OnUserLogin?.Invoke();
+                return true; 
+            }
+
+            return false; 
+        }
+        
+        /// <summary>
+        /// Saves user to database, returns true if sent save query, otherwise returns false. 
+        /// </summary>
+        public static bool CreateUser(string username, string password)
+        {
+            #if UNITY_EDITOR
+            Debug.Log($"Creating user {username}");
+            #endif
+            
             if (!CheckUsername(username))
             {
-                Debug.Log("Username already in use");
-                return;
+                return false; 
             }
-        
-            SQLiteConnection connection = DatabaseManager.GetConnection();
-        
-            connection.Open();
-        
-            SQLiteCommand command = connection.CreateCommand();
-            command.CommandType = System.Data.CommandType.Text;
-            command.CommandText = "INSERT INTO users (username, password) VALUES ('" + username + "','" + password + "');";
-            command.ExecuteNonQuery();
-        
-            connection.Close();
+            
+            User newUser = new User
+            {
+                username = username,
+                password = password
+            };
+
+            DatabaseManager.SaveQuery(newUser);
+
+            return true; 
         }
 
         /// <summary>
@@ -32,26 +68,23 @@ namespace Quizly
         /// <returns>True if username is free, false if username taken</returns>
         public static bool CheckUsername(string username)
         {
-            SQLiteConnection connection = DatabaseManager.GetConnection();
-        
-            connection.Open();
-        
-            SQLiteCommand command = connection.CreateCommand();
-            command.CommandType = System.Data.CommandType.Text;
-            command.CommandText = "SELECT * FROM users";
-            var reader = command.ExecuteReader();
-
-            while (reader.Read())
+            #if UNITY_EDITOR
+            Debug.Log($"Checking user {username}");
+            #endif
+            
+            if (DatabaseManager.ValuesQuery(DatabaseManager.Table.Users, "username" , 
+                    new Dictionary<string, List<string>>(){{"username", new List<string>(){username}}}).Count > 0)
             {
-                if (reader["username"].Equals(username))
-                {
-                    connection.Close();
-                    return false; 
-                }
+                return false;
             }
-        
-            connection.Close();
+            
             return true;
+        }
+
+        public static void Logout()
+        {
+            _loggedIn = null;
+            OnUserLogout?.Invoke();
         }
     }
 }

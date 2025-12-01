@@ -5,9 +5,21 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Quizly/Quickbuild/Scenes/CreateUser.unity
+    guid: 2009451478bc3af479664659dacd3d36
+  - enabled: 1
+    path: Assets/Quizly/Quickbuild/Scenes/MainMenu.unity
+    guid: 9e80fe4a7b5e8bc4fbe82f73b0d84d85
+  - enabled: 1
+    path: Assets/Quizly/Quickbuild/Scenes/QuizPlay.unity
+    guid: 97b95393b77af6c4b8835fc4a2308508
+  - enabled: 1
+    path: Assets/Quizly/Quickbuild/Scenes/QuizDisplay.unity
+    guid: d8d5c2dd379c6234ba0b640d8834e6d3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

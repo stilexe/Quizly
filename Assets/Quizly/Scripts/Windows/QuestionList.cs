@@ -42,10 +42,9 @@ namespace Quizly
                 
                 menu.AddItem(new GUIContent("None"), false, ChangeCategory, "");
 
-                foreach (string s in DatabaseManager.SearchQuery(DatabaseManager.Table.Categories,
-                             new List<string>() { "name" }))
+                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Categories))
                 {
-                    menu.AddItem(new GUIContent(s), false, ChangeCategory, s);
+                    menu.AddItem(new GUIContent((string)o), false, ChangeCategory, ((string)o));
                 }
                 
                 menu.ShowAsContext();
@@ -91,9 +90,14 @@ namespace Quizly
 
         private void UpdateQuestionDisplay()
         {
+            _questionDisplay = new List<Question>();
+            
             if (string.IsNullOrEmpty(_searchBar) && string.IsNullOrEmpty(_searchCategory))
             {
-                _questionDisplay = DatabaseManager.SearchQuestions();
+                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Questions))
+                {
+                    _questionDisplay.Add((Question)o);
+                }
                 return;
             }
             
@@ -108,8 +112,11 @@ namespace Quizly
             {
                 searchDict.Add("category_id", DatabaseManager.GetID(DatabaseManager.Table.Categories, "name", _searchCategory).ToString());
             }
-            
-            _questionDisplay = DatabaseManager.SearchQuestions(searchDict);
+
+            foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Questions, searchDict, false))
+            {
+                _questionDisplay.Add((Question)o);
+            }
         }
     }
 }

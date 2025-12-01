@@ -45,17 +45,10 @@ namespace Quizly
             if (EditorGUILayout.DropdownButton(new GUIContent(_categoryName), FocusType.Keyboard))
             {
                 GenericMenu categoryMenu = new GenericMenu();
-                string[] splitArray;
-                string categoryName;
-                //int categoryID; 
 
-                foreach (string category in DatabaseManager.SearchQuery(DatabaseManager.Table.Categories))
+                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Categories))
                 {
-                    splitArray = category.Split('|');
-                    //categoryID = int.Parse(splitArray[0].Trim());
-                    categoryName = splitArray[1].Trim(); 
-                
-                    categoryMenu.AddItem(new GUIContent(categoryName), false,SetQuestionCategory, categoryName);
+                    categoryMenu.AddItem(new GUIContent((string)o), false, SetQuestionCategory, o);
                 }
                 
                 categoryMenu.ShowAsContext();

@@ -31,7 +31,9 @@ namespace Quizly
             
             if (GUILayout.Button("Add"))
             {
-                AddCategory();
+                DatabaseManager.SaveQuery(newCategory);
+                newCategory = "";
+                LoadCategories();
             }
             
             //CATEGORY LIST 
@@ -45,8 +47,10 @@ namespace Quizly
                 LoadCategories();
                 GUILayout.EndHorizontal();
             }
-            
-            GUILayout.EndHorizontal();
+            else
+            {
+                GUILayout.EndHorizontal();
+            }
             
             foreach (string cat in categories)
             {
@@ -56,7 +60,7 @@ namespace Quizly
                 
                 if (GUILayout.Button("-"))
                 {
-                    RemoveCategory(cat);
+                    DatabaseManager.RemoveQuery(cat);
                     GUILayout.EndHorizontal();
                 }
                 
@@ -64,21 +68,14 @@ namespace Quizly
             }
         }
 
-        private void AddCategory()
-        {
-            DatabaseManager.SaveQuery(newCategory);
-            newCategory = "";
-            LoadCategories();
-        }
-
         private void LoadCategories()
         {
-            categories = DatabaseManager.SearchQuery(DatabaseManager.Table.Categories);
-        }
-
-        private void RemoveCategory(string cat)
-        {
+            categories.Clear();
             
+            foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Categories))
+            {
+                categories.Add((string)o);
+            }
         }
     }
 }

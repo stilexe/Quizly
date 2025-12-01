@@ -9,6 +9,7 @@ namespace Quizly
     {
         private string _errorMessage; 
         private bool _timed;
+        private bool _updateDisplay; 
 
         private string _searchBar;
         private List<Question> _questionDisplay = new List<Question>(); 
@@ -62,7 +63,7 @@ namespace Quizly
 
             if (_questionDisplay.Count == 0 || _questionDisplay is null)
             {
-                UpdateQuestionDisplay();
+                _updateDisplay = true;
             }
 
             //search bar 
@@ -71,7 +72,7 @@ namespace Quizly
             _searchBar = GUILayout.TextField(_searchBar);
             if (GUILayout.Button("Search"))
             {
-                UpdateQuestionDisplay(_searchBar);
+                _updateDisplay = true;
                 GUILayout.EndHorizontal();
             }
             else
@@ -81,6 +82,11 @@ namespace Quizly
 
             //show all questions in the display list
             //list them with an add button 
+            if (_updateDisplay)
+            {
+                UpdateQuestionDisplay();    
+            }
+            
             foreach (Question question in _questionDisplay)
             {
                 GUILayout.BeginHorizontal();
@@ -91,7 +97,7 @@ namespace Quizly
                 if (GUILayout.Button("+"))
                 {
                     _newQuestions.Add(question, 0);
-                    UpdateQuestionDisplay();
+                    _updateDisplay = true;
                     GUILayout.EndHorizontal();
                 }
                 else
@@ -148,15 +154,26 @@ namespace Quizly
 
         }
 
-        private void UpdateQuestionDisplay(string search = null)
+        private void UpdateQuestionDisplay()
         {
-            if (search is null)
+            _questionDisplay.Clear();
+            
+            if (string.IsNullOrEmpty(_searchBar))
             {
-                _questionDisplay = DatabaseManager.SearchQuestions();
+                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Questions))
+                {
+                    _questionDisplay.Add((Question)o);
+                }
             }
             else
             {
-                _questionDisplay = DatabaseManager.SearchQuestions();
+                Dictionary<string, string> displaySearch = new Dictionary<string, string>();
+                displaySearch.Add("question_text", _searchBar);
+
+                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Questions, displaySearch, false))
+                {
+                    _questionDisplay.Add((Question)o);
+                }
             }
             
             List<Question> toRemove = new List<Question>();
@@ -176,6 +193,8 @@ namespace Quizly
             {
                 _questionDisplay.Remove(q);
             }
+
+            _updateDisplay = false; 
         }
 
         private void SaveQuiz()

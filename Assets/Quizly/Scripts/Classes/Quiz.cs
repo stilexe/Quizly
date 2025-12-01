@@ -23,4 +23,26 @@ namespace Quizly
         public int questionID;
         public int weight;
     }
+
+    public class Result
+    {
+        public int quizID;
+        public string username;
+        public string date;
+        public int score; 
+        public SubmissionSet submissionSet;
+    }
+
+    [System.Serializable]
+    public class SubmissionSet
+    {
+        public List<AnswerSubmission> submissions;
+    }
+
+    public class AnswerSubmission
+    {
+        public int questionID;
+        public List<string> answers;
+        public bool isCorrect;
+    }
 }

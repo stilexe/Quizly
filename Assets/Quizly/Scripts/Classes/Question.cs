@@ -12,12 +12,6 @@ namespace Quizly
         public int difficulty;
         public string tip;
     }
-
-    public class Category
-    {
-        public int catID;
-        public string catName;
-    }
     
     [System.Serializable]
     public class AnswerSet
