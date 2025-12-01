@@ -39,6 +39,7 @@ namespace Quizly
         public List<AnswerSubmission> submissions;
     }
 
+    [System.Serializable]
     public class AnswerSubmission
     {
         public int questionID;
