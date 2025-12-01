@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Quizly;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 public class QuestionDisplay : MonoBehaviour
@@ -64,6 +65,9 @@ public class QuestionDisplay : MonoBehaviour
             {
                 _answerDisplays[i].SetActive(false);
             }
+            
+            //clear toggle 
+            _answerDisplays[i].GetComponentInChildren<Toggle>().isOn = false;
         }
 
         //show answers 

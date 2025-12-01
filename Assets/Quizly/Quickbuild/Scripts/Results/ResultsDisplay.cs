@@ -19,26 +19,35 @@ public class ResultsDisplay : MonoBehaviour
     private List<GameObject> _pastResultDisplays = new List<GameObject>();
     private List<Result> _pastResults = new List<Result>();
 
-    private void OnEnable()
+    private void Start()
     {
-        QuizManager.OnQuizComplete += ShowResults;
+        ShowResults();
     }
 
-    private void OnDisable()
+    private void Update()
     {
-        QuizManager.OnQuizComplete -= ShowResults;
+        if (_displaying is null)
+        {
+            ShowResults();
+        }
     }
 
-    private void ShowResults(Result toShow)
+    private void ShowResults()
     {
-        _displaying = toShow;
+        _displaying = QuizManager.GetResults();
+
+        if (_displaying is null)
+        {
+            return;
+        }
+        
         quizName.text = QuizManager.QuizName();
-        score.text = toShow.score.ToString();
+        score.text = _displaying.score.ToString();
         maxScore.text = QuizManager.QuizMaxScore().ToString();
 
         for (int i = 0; i < answerDisplays.Count; i++)
         {
-            if (i > toShow.submissionSet.submissions.Count)
+            if (i > _displaying.submissionSet.submissions.Count)
             {
                 answerDisplays[i].SetActive(false);
             }
@@ -48,14 +57,14 @@ public class ResultsDisplay : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < toShow.submissionSet.submissions.Count; i++)
+        for (int i = 0; i < _displaying.submissionSet.submissions.Count; i++)
         {
-            if (i > answerDisplays.Count)
+            if (i > answerDisplays.Count - 1)
             {
                 answerDisplays.Add(Instantiate(answerPrefab, answerKeyHolder.transform));
             }
             
-            answerDisplays[i].GetComponent<AnswerSubmissionDisplay>().ShowAnswer(toShow.submissionSet.submissions[i]);
+            answerDisplays[i].GetComponent<AnswerSubmissionDisplay>().ShowAnswer(_displaying.submissionSet.submissions[i]);
         }
     }
 

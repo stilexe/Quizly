@@ -405,7 +405,7 @@ namespace Quizly
                     queryString = queryString.TrimEnd(',');
                     queryString += ")";
                 }
-                else
+                else if (pair.Value.Count == 1)
                 {
                     if (int.TryParse(pair.Value[0], out int value))
                     {
@@ -424,9 +424,9 @@ namespace Quizly
             
             List<string> results = new List<string>();
             
-#if UNITY_EDITOR
-            Debug.Log(queryString);
-#endif
+            // #if UNITY_EDITOR
+            // Debug.Log(queryString);
+            // #endif
             
             //connect and send query 
             SQLiteConnection connection = GetConnection();
@@ -438,7 +438,7 @@ namespace Quizly
 
             while (reader.Read())
             {
-                results.Add(reader.GetString(0));
+                results.Add(reader[columnToReturn].ToString());
             }
             
             connection.Close();
@@ -480,7 +480,7 @@ namespace Quizly
                 
                 case Result results:
                     queryString += $"{Table.Results.ToString().ToLower()} ('quiz_id', 'username', 'result_date', 'score', 'answers') VALUES (";
-                    queryString += $"{results.quizID}, '{results.username}', '{results.date}', '{results.score}', '{JsonUtility.ToJson(results.submissionSet)});";
+                    queryString += $"{results.quizID}, '{results.username}', '{results.date}', '{results.score}', '{JsonUtility.ToJson(results.submissionSet)}');";
                     break;
                 
                 case Question question:
