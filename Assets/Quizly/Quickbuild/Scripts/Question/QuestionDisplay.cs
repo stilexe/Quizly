@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Quizly;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
 public class QuestionDisplay : MonoBehaviour
 {
@@ -14,6 +12,9 @@ public class QuestionDisplay : MonoBehaviour
     [SerializeField] private TextMeshProUGUI errorMessage; 
     
     private List<GameObject> _answerDisplays = new List<GameObject>();
+    private List<Toggle> _answerToggles = new List<Toggle>();
+    private List<Toggle> _onToggles = new List<Toggle>();
+    private int _maxAnswers;
 
     private void OnEnable()
     {
@@ -23,6 +24,11 @@ public class QuestionDisplay : MonoBehaviour
     private void OnDisable()
     {
         QuizManager.OnNewQuestion -= ShowQuestion;
+
+        foreach (Toggle toggle in _answerToggles)
+        {
+            toggle.onValueChanged.RemoveAllListeners();
+        }
     }
 
     private void Start()
@@ -32,8 +38,11 @@ public class QuestionDisplay : MonoBehaviour
 
     private void ShowQuestion()
     {
+        _onToggles.Clear();
+        
         //show question 
         Question toShow = QuizManager.GetCurrentQuestion();
+        _maxAnswers = toShow.answerSet.correctAnswers.Count;
 
         questionText.text = toShow.question;
 
@@ -77,11 +86,63 @@ public class QuestionDisplay : MonoBehaviour
             {
                 GameObject answerDisplay = Instantiate(answerDisplayPrefab, answerHolder.transform); 
                 _answerDisplays.Add(answerDisplay);
+                _answerToggles.Add(answerDisplay.GetComponentInChildren<Toggle>());
             }
             
             _answerDisplays[i].GetComponent<AnswerDisplay>().SetAnswer(answers[i]);
         }
 
+        foreach (Toggle toggle in _answerToggles)
+        {
+            toggle.onValueChanged.AddListener(ToggleClicked);
+        }
+        
+        Debug.Log($"New question on toggles {_onToggles.Count}, answer toggles {_answerToggles.Count}");
+
+    }
+
+    private void ToggleClicked(bool value)
+    {
+        if (value && _onToggles.Count == _maxAnswers) //toggle changed to true but max answers chosen
+        {
+            #if UNITY_EDITOR
+            Debug.Log("Max answers chosen");
+            #endif
+            
+            errorMessage.text = "Max answers chosen";
+
+            foreach (Toggle toggle in _answerToggles)
+            {
+                if (toggle.isOn && !_onToggles.Contains(toggle)) //if toggle is on and not in on toggles 
+                {
+                    toggle.isOn = false; //turn toggle off
+                }
+            }
+        }
+        else if(value) //changed to true but max answers not chosen 
+        {
+            errorMessage.text = "";
+            
+            foreach (Toggle toggle in _answerToggles)
+            {
+                if (toggle.isOn && !_onToggles.Contains(toggle)) //if toggle on but not in on toggles 
+                {
+                    _onToggles.Add(toggle); //add to on toggles 
+                }
+            }
+        }
+        else //toggle changed to false 
+        {
+            errorMessage.text = "";
+            
+            foreach (Toggle toggle in _answerToggles)
+            {
+                if (!toggle.isOn && _onToggles.Contains(toggle)) //if toggle off but in on toggles 
+                {
+                    _onToggles.Remove(toggle); //remove from on toggles 
+                }
+            }
+        }
     }
 
     public void SubmitQuestion()
@@ -100,12 +161,36 @@ public class QuestionDisplay : MonoBehaviour
             }
         }
 
-        if (answers.Count == 0)
+        if (!CheckToggles())
         {
-            errorMessage.text = "Need at least one answer.";
+            errorMessage.text = $"Question requires {_maxAnswers} answer";
+
+            if (_maxAnswers > 1)
+            {
+                errorMessage.text += "s.";
+            }
+            else
+            {
+                errorMessage.text += ".";
+            }
+            
             return;
         }
         
         QuizManager.SubmitAnswer(answers);
+    }
+
+    /// <summary>
+    /// Checks if the max number of answers have been selected. 
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckToggles()
+    {
+        if (_onToggles.Count == _maxAnswers)
+        {
+            return true;
+        }
+
+        return false; 
     }
 }

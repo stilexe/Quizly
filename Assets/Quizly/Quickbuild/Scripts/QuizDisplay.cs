@@ -29,9 +29,11 @@ public class QuizDisplay : MonoBehaviour
 
     public void StartQuiz()
     {
-        #if UNITY_EDITOR
-        Debug.Log("Starting quiz " + _displayedID);
-        #endif
+        if (!UserManager.IsLoggedIn())
+        {
+            FindFirstObjectByType<UserDisplay>().ShowMessage("Please log in");
+            return;
+        }
         
         QuizManager.LoadQuiz(_displayedID);
         SceneManager.LoadScene("QuizPlay");

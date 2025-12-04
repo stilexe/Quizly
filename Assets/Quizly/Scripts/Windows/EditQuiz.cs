@@ -1,16 +1,12 @@
-using UnityEngine;
+using UnityEditor;
 
-public class EditQuiz : MonoBehaviour
+namespace Quizly
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public class EditQuiz : EditorWindow
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public static void Create(int quizID)
+        {
+            EditQuiz win = GetWindow<EditQuiz>(); 
+        }
     }
 }

@@ -1,16 +1,110 @@
+using System;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-public class QuizList : MonoBehaviour
+namespace Quizly
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public class QuizList : EditorWindow
     {
+        private Dictionary<int, string> _quizDisplay;
+        private string _searchBar; 
         
-    }
+        [MenuItem("Window/Quizly/View Quizzes")]
+        public static void Create()
+        {
+            QuizList win = GetWindow<QuizList>();
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        private void OnGUI()
+        {
+            GUILayout.Label("Quiz List");
+            
+            //get all quizzes 
+
+            if (_quizDisplay is null)
+            {
+                RefreshDisplay();    
+            }
+            
+            //search bar 
+            
+            GUILayout.BeginHorizontal();
+            
+            GUILayout.Label("Search: ");
+            _searchBar = GUILayout.TextField(_searchBar);
+
+            if (GUILayout.Button("Search"))
+            {
+                RefreshDisplay();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.EndHorizontal();
+            }
+            
+            //show each quiz in a list
+            foreach (KeyValuePair<int, string> pair in _quizDisplay)
+            {
+                GUILayout.BeginHorizontal();
+                
+                GUILayout.Label(pair.Value);
+
+                if (GUILayout.Button("Edit"))
+                {
+                    EditQuiz.Create(pair.Key);
+                    GUILayout.EndHorizontal();
+                }
+                else if (GUILayout.Button("-"))
+                {
+                    DBManager.RemoveData(DBManager.Table.Quizzes, pair.Key);
+                    RefreshDisplay();
+                    GUILayout.EndHorizontal();
+                }
+                else
+                {
+                    GUILayout.EndHorizontal();
+                }
+            }
+        }
+
+        private void RefreshDisplay()
+        {
+            _quizDisplay = new Dictionary<int, string>();
+            
+            List<string> quizIDs = new List<string>();
+
+            //get ids of all quizzes to display 
+            if (string.IsNullOrEmpty(_searchBar))
+            {
+                foreach (string id in DBManager.FindValues(DBManager.Table.Quizzes, "id")) //every quiz id
+                {
+                    quizIDs.Add(id);
+                }
+            }
+            else
+            {
+                Dictionary<string, List<string>> dict = new Dictionary<string, List<string>>()
+                {
+                    {"name", new List<string>() {_searchBar}}
+                };
+                
+                foreach (string id in DBManager.FindValues(DBManager.Table.Quizzes, "id", dict, false)) //every quiz id that matches the search bar
+                {
+                    quizIDs.Add(id);
+                }
+            }
+
+            string quizName; 
+            foreach (string id in quizIDs)
+            {
+                //get quiz name 
+                quizName = DBManager.FindValues(DBManager.Table.Quizzes, "name", new Dictionary<string,List<string>>() {{"id", new List<string>(){id}}})[0]; 
+                
+                _quizDisplay.Add(int.Parse(id), quizName);
+            }
+            
+        }
     }
 }

@@ -56,7 +56,7 @@ namespace Quizly
             }
             searchDict.Add("question_id", qIDs);
 
-            foreach (string weight in DatabaseManager.ValuesQuery(DatabaseManager.Table.Weightings, "weighting", searchDict))
+            foreach (string weight in DBManager.FindValues(DBManager.Table.Weightings, "weight", searchDict))
             {
                 score += int.Parse(weight);
             }
@@ -66,7 +66,7 @@ namespace Quizly
 
         public static void LoadQuiz(int id)
         {
-            _loadedQuiz = (Quiz)DatabaseManager.FindWithID(DatabaseManager.Table.Quizzes, id);
+            _loadedQuiz = (Quiz)DBManager.SearchWithID(DBManager.Table.Quizzes, id);
             _submittedAnswers = new Dictionary<int, List<string>>();
             _unusedQuestions = _loadedQuiz.questionSet.questionIDs;
             _quizResults = null; 
@@ -95,7 +95,7 @@ namespace Quizly
                 return;
             }
             
-            _loadedQuestion = (Question)DatabaseManager.FindWithID(DatabaseManager.Table.Questions, _unusedQuestions[Random.Range(0, _unusedQuestions.Count)]);
+            _loadedQuestion = (Question)DBManager.SearchWithID(DBManager.Table.Questions, _unusedQuestions[Random.Range(0, _unusedQuestions.Count)]);
             _unusedQuestions.Remove(_loadedQuestion.id);
             
             OnNewQuestion?.Invoke();
@@ -113,11 +113,11 @@ namespace Quizly
                 answerSubmission = new AnswerSubmission() { questionID = key, answers = _submittedAnswers[key] }; 
                 
                 // get the correct answers
-                List<string> correctAnswers = DatabaseManager.ValuesQuery(DatabaseManager.Table.Questions,
-                    "answer_set", "id", new List<string>() { key.ToString() });
+                List<string> correctAnswers = DBManager.FindValues(DBManager.Table.Questions,
+                    "answer_set", new Dictionary<string, List<string>>() {{"id", new List<string>() { key.ToString() }}});
                 correctAnswers = JsonUtility.FromJson<AnswerSet>(correctAnswers[0]).correctAnswers;
 
-                int weight = int.Parse(DatabaseManager.ValuesQuery(DatabaseManager.Table.Weightings, "weighting" , 
+                int weight = int.Parse(DBManager.FindValues(DBManager.Table.Weightings, "weight", 
                     new Dictionary<string, List<string>>(){{"quiz_id", new List<string>(){_loadedQuiz.id.ToString()}}, 
                         {"question_id", new List<string>(){key.ToString()}}})[0]);
                 
@@ -162,10 +162,10 @@ namespace Quizly
                 submissionObjects.Add(answerSubmission);
             }
             
-            _quizResults = new Result
+            _quizResults = new Result()
             {
                 quizID = _loadedQuiz.id,
-                username = UserManager.GetLoggedIn().username,
+                userID = DBManager.FindID(DBManager.Table.Users, "username", UserManager.GetLoggedIn().username),
                 date = System.DateTime.Today.ToString("DD/MM/YYYY"),
                 score = score,
                 submissionSet = new SubmissionSet() {submissions = submissionObjects}

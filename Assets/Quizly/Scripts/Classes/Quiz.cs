@@ -27,7 +27,7 @@ namespace Quizly
     public class Result
     {
         public int quizID;
-        public string username;
+        public int userID;
         public string date;
         public int score; 
         public SubmissionSet submissionSet;

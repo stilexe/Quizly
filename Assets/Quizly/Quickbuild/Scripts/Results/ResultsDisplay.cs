@@ -70,7 +70,7 @@ public class ResultsDisplay : MonoBehaviour
 
     public void SaveResults()
     {
-        DatabaseManager.SaveQuery(_displaying);
+        DBManager.SaveObject(_displaying);
     }
 
     public void SeePastResults()

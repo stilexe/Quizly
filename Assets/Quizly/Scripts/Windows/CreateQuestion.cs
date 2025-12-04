@@ -45,10 +45,14 @@ namespace Quizly
             if (EditorGUILayout.DropdownButton(new GUIContent(_categoryName), FocusType.Keyboard))
             {
                 GenericMenu categoryMenu = new GenericMenu();
+                List<object> categories = DBManager.FindMatching(DBManager.Table.Categories);
 
-                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Categories))
+                if (categories is not null)
                 {
-                    categoryMenu.AddItem(new GUIContent((string)o), false, SetQuestionCategory, o);
+                    foreach (object o in categories)
+                    {
+                        categoryMenu.AddItem(new GUIContent((string)o), false, SetQuestionCategory, o);
+                    }
                 }
                 
                 categoryMenu.ShowAsContext();
@@ -257,14 +261,15 @@ namespace Quizly
                     break;
             }
             
-            newQuestion.categoryID = DatabaseManager.GetID(DatabaseManager.Table.Categories, "name", _categoryName);
+            newQuestion.categoryID = DBManager.FindID(DBManager.Table.Categories, "name", _categoryName);
             
-            DatabaseManager.SaveQuery(newQuestion);
+            DBManager.SaveObject(newQuestion);
 
             _questionText = "";
             _explanationText = "";
             _difficulty = 1;
             _categoryName = "";
+            _answers.Clear();
         }
     }
 }

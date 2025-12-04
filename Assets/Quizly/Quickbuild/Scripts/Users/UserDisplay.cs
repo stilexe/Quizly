@@ -35,6 +35,14 @@ public class UserDisplay : MonoBehaviour
         UserManager.OnUserLogout -= UserLoggedOut;
     }
 
+    private void Start()
+    {
+        if (UserManager.GetLoggedIn() != null)
+        {
+            UserLoggedIn();
+        }
+    }
+
     private void UserLoggedIn()
     {
         loginPanel.SetActive(false);
@@ -49,7 +57,7 @@ public class UserDisplay : MonoBehaviour
         displayPanel.SetActive(false);
     }
 
-    private void ShowMessage(string message)
+    public void ShowMessage(string message)
     {
         messageText.text = message;
     }

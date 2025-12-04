@@ -8,6 +8,7 @@ namespace Quizly
     {
         private string newCategory = "";
         private List<string> categories = new List<string>();
+        private string _errorMessage = "";
     
         [MenuItem("Window/Quizly/Category Manager")]
         public static void Create()
@@ -31,10 +32,12 @@ namespace Quizly
             
             if (GUILayout.Button("Add"))
             {
-                DatabaseManager.SaveQuery(newCategory);
+                DBManager.SaveObject(newCategory);
                 newCategory = "";
                 LoadCategories();
             }
+            
+            GUILayout.Label(_errorMessage);
             
             //CATEGORY LIST 
             
@@ -60,11 +63,23 @@ namespace Quizly
                 
                 if (GUILayout.Button("-"))
                 {
-                    DatabaseManager.RemoveQuery(cat);
+                    int id = DBManager.FindID(DBManager.Table.Categories, "name", cat); 
+                    
+                    if(!DBManager.CanBeRemoved(DBManager.Table.Categories, id))
+                    {
+                        _errorMessage = "Category being used in questions.";
+                    }
+                    else
+                    {
+                        DBManager.RemoveData(DBManager.Table.Categories, id);
+                    }
+                    
                     GUILayout.EndHorizontal();
                 }
-                
-                GUILayout.EndHorizontal();
+                else
+                {
+                    GUILayout.EndHorizontal();
+                }
             }
         }
 
@@ -72,9 +87,13 @@ namespace Quizly
         {
             categories.Clear();
             
-            foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Categories))
+            List<object> toAdd = DBManager.FindMatching(DBManager.Table.Categories);
+
+            if (toAdd is null) return; 
+            
+            foreach (object o in DBManager.FindMatching(DBManager.Table.Categories))
             {
-                categories.Add((string)o);
+                categories.Add((string)o); 
             }
         }
     }

@@ -28,7 +28,8 @@ public class AnswerSubmissionDisplay : MonoBehaviour
         else
         {
             correctMarker.SetActive(false);
-            tipText.text = DatabaseManager.ValuesQuery(DatabaseManager.Table.Questions, "tip", "id", new List<string>() {toDisplay.questionID.ToString()})[0];
+            tipText.text = DBManager.FindValues(DBManager.Table.Questions, "tip", 
+                new Dictionary<string, List<string>>(){{"id", new List<string>() {toDisplay.questionID.ToString()}}})[0];
         }
     }
 }

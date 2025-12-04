@@ -33,8 +33,15 @@ public class QuizDisplayHolder : MonoBehaviour
     public void LoadQuizzes()
     {
         _all = new List<Quiz>();
+
+        List<object> allQuizzes = DBManager.FindMatching(DBManager.Table.Quizzes);
+
+        if (allQuizzes is null)
+        {
+            return;
+        }
         
-        foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Quizzes))
+        foreach (object o in DBManager.FindMatching(DBManager.Table.Quizzes))
         {
             _all.Add((Quiz)o);
         }

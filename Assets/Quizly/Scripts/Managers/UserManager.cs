@@ -18,17 +18,24 @@ namespace Quizly
             return _loggedIn;
         }
 
+        public static bool IsLoggedIn()
+        {
+            return _loggedIn is not null;
+        }
+
         /// <summary>
         /// Tries to login with the passed username and password. 
         /// </summary>
         /// <returns>True if able to login, false if not</returns>
         public static bool TryLogin(string username, string password)
         {
-            string dataPassword = DatabaseManager.ValuesQuery(DatabaseManager.Table.Users, "password", "username", new List<string>(){username})[0];
+            string dataPassword = DBManager.FindValues(DBManager.Table.Users, "password", 
+                new Dictionary<string, List<string>>(){{"username", new List<string>(){username}}})[0];
 
             if (dataPassword == password)
             {
-                _loggedIn = (User)DatabaseManager.FindMatching(DatabaseManager.Table.Users, "username", new List<string>(){username})[0];
+                _loggedIn = (User)DBManager.FindMatching(DBManager.Table.Users, 
+                    new Dictionary<string, string>(){{"username", username}})[0];
                 OnUserLogin?.Invoke();
                 return true; 
             }
@@ -56,7 +63,7 @@ namespace Quizly
                 password = password
             };
 
-            DatabaseManager.SaveQuery(newUser);
+            DBManager.SaveObject(newUser);
 
             return true; 
         }
@@ -72,7 +79,7 @@ namespace Quizly
             Debug.Log($"Checking user {username}");
             #endif
             
-            if (DatabaseManager.ValuesQuery(DatabaseManager.Table.Users, "username" , 
+            if (DBManager.FindValues(DBManager.Table.Users, "*", 
                     new Dictionary<string, List<string>>(){{"username", new List<string>(){username}}}).Count > 0)
             {
                 return false;
@@ -85,6 +92,22 @@ namespace Quizly
         {
             _loggedIn = null;
             OnUserLogout?.Invoke();
+        }
+
+        public static bool DeleteUser(string username)
+        {
+            Dictionary<string,string> searchValues = new Dictionary<string,string>(){{"username",username}};
+            
+            if (CheckUsername(username))
+            {
+                DBManager.RemoveData(DBManager.Table.Users, DBManager.FindID(DBManager.Table.Users, "username", username));
+                return true; 
+            }
+            
+#if UNITY_EDITOR
+            Debug.Log($"User doesn't exist");
+#endif
+            return false;
         }
     }
 }

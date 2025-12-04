@@ -157,23 +157,23 @@ namespace Quizly
         private void UpdateQuestionDisplay()
         {
             _questionDisplay.Clear();
+            List<object> toDisplay = new List<object>();
             
             if (string.IsNullOrEmpty(_searchBar))
             {
-                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Questions))
-                {
-                    _questionDisplay.Add((Question)o);
-                }
+                toDisplay = DBManager.FindMatching(DBManager.Table.Questions);
             }
             else
             {
                 Dictionary<string, string> displaySearch = new Dictionary<string, string>();
                 displaySearch.Add("question_text", _searchBar);
-
-                foreach (object o in DatabaseManager.FindMatching(DatabaseManager.Table.Questions, displaySearch, false))
-                {
-                    _questionDisplay.Add((Question)o);
-                }
+                
+                toDisplay = DBManager.FindMatching(DBManager.Table.Questions, displaySearch, false);
+            }
+            
+            foreach (object o in toDisplay)
+            {
+                _questionDisplay.Add((Question)o);
             }
             
             List<Question> toRemove = new List<Question>();
@@ -221,21 +221,22 @@ namespace Quizly
                 _newQuiz.questionSet.questionIDs.Add(question.id); //add id to question set 
             }
             
-            DatabaseManager.SaveQuery(_newQuiz);
+            DBManager.SaveObject(_newQuiz);
             
             //save weightings 
             //quiz now saved, get id 
-            int id = DatabaseManager.GetID(DatabaseManager.Table.Quizzes, "name", _newQuiz.quizName);
+            int id = DBManager.FindID(DBManager.Table.Quizzes, "name", _newQuiz.quizName);
             
-            QuestionWeighting weight = new QuestionWeighting();
-            weight.quizID = id;
+            Debug.Log($"New quiz questions {_newQuestions.Count}");
 
             foreach (KeyValuePair<Question, int> question in _newQuestions)
             {
+                QuestionWeighting weight = new QuestionWeighting();
+                weight.quizID = id;
                 weight.questionID = question.Key.id;
                 weight.weight = question.Value;
                 
-                DatabaseManager.SaveQuery(weight);
+                DBManager.SaveObject(weight);
             }
 
             _newQuiz = null;
