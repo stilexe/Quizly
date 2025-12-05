@@ -6,6 +6,8 @@ namespace Quizly
 {
     public class CategoryManager : EditorWindow
     {
+        private Vector2 _scrollPos; 
+        
         private string newCategory = "";
         private List<string> categories = new List<string>();
         private string _errorMessage = "";
@@ -18,34 +20,43 @@ namespace Quizly
 
         private void OnGUI()
         {
-            GUILayout.Label("Category Manager");
+            GUILayout.Label("Category Manager", StyleLibrary.Header2Style);
 
-            // ADD CATEGORY 
-            GUILayout.Label("Add Category");
+            #region AddCategory
+
+            GUILayout.Label("Add Category", StyleLibrary.Header3Style);
             
             GUILayout.BeginHorizontal();
-            
+            GUILayout.Space(15);
             GUILayout.Label("Name: ");
-            newCategory = GUILayout.TextField(newCategory);
-            
+            newCategory = GUILayout.TextField(newCategory, GUILayout.ExpandWidth(true));
+            GUILayout.Space(10);
             GUILayout.EndHorizontal();
             
-            if (GUILayout.Button("Add"))
+            GUILayout.Space(15);
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Add", GUILayout.Width(65), GUILayout.Height(25)))
             {
                 DBManager.SaveObject(newCategory);
                 newCategory = "";
                 LoadCategories();
             }
+            GUILayout.Space(10);
+            GUILayout.EndHorizontal();
+
+            #endregion
             
-            GUILayout.Label(_errorMessage);
-            
-            //CATEGORY LIST 
-            
+            GUILayout.Space(25);
+
+            #region CategoryList
+
             GUILayout.BeginHorizontal();
             
-            GUILayout.Label("All Categories");
+            GUILayout.Label("All Categories", StyleLibrary.Header3Style);
             
-            if (GUILayout.Button("Refresh"))
+            if (GUILayout.Button("Refresh", GUILayout.Width(85), GUILayout.Height(23)))
             {
                 LoadCategories();
                 GUILayout.EndHorizontal();
@@ -55,13 +66,16 @@ namespace Quizly
                 GUILayout.EndHorizontal();
             }
             
+            GUILayout.Space(10);
+            _scrollPos = GUILayout.BeginScrollView(_scrollPos);
+            
             foreach (string cat in categories)
             {
                 GUILayout.BeginHorizontal();
-                
+                GUILayout.Space(25);
                 GUILayout.Label(cat);
                 
-                if (GUILayout.Button("-"))
+                if (GUILayout.Button("-", GUILayout.Width(35)))
                 {
                     int id = DBManager.FindID(DBManager.Table.Categories, "name", cat); 
                     
@@ -78,9 +92,18 @@ namespace Quizly
                 }
                 else
                 {
+                    GUILayout.Space(15);
                     GUILayout.EndHorizontal();
                 }
+                
+                GUILayout.Space(5);
             }
+            
+            GUILayout.EndScrollView();
+
+            #endregion
+            
+            GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
         }
 
         private void LoadCategories()

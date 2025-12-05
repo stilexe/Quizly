@@ -8,7 +8,9 @@ namespace Quizly
     public class QuizList : EditorWindow
     {
         private Dictionary<int, string> _quizDisplay;
-        private string _searchBar; 
+        private string _searchBar;
+        private Vector2 _scrollPos;
+        private string _errorMessage; 
         
         [MenuItem("Window/Quizly/View Quizzes")]
         public static void Create()
@@ -43,6 +45,8 @@ namespace Quizly
             {
                 GUILayout.EndHorizontal();
             }
+
+            _scrollPos = GUILayout.BeginScrollView(_scrollPos);
             
             //show each quiz in a list
             foreach (KeyValuePair<int, string> pair in _quizDisplay)
@@ -67,10 +71,19 @@ namespace Quizly
                     GUILayout.EndHorizontal();
                 }
             }
+            
+            GUILayout.EndScrollView();
+            GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
         }
 
         private void RefreshDisplay()
         {
+            if (!DBManager.DatabaseLoaded())
+            {
+                _errorMessage = "No database loaded";
+                return; 
+            }
+            
             _quizDisplay = new Dictionary<int, string>();
             
             List<string> quizIDs = new List<string>();

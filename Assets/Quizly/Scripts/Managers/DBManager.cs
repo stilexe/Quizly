@@ -42,7 +42,7 @@ namespace Quizly
             }},
             { Table.Weightings, new List<string>()
             {
-                "id INTEGER PRIMARY KEY UNIQUE", "question_id INTEGER NOT NULL", "quiz_id INTEGER NOT NULL", "weighting INTEGER NOT NULL"
+                "id INTEGER PRIMARY KEY UNIQUE", "question_id INTEGER NOT NULL", "quiz_id INTEGER NOT NULL", "weight INTEGER NOT NULL"
             }},
             { Table.Quizzes, new List<string>()
             {
@@ -126,6 +126,16 @@ namespace Quizly
             return name;
         }
 
+        public static string DatabaseFilePath(bool full = false)
+        {
+            if (full)
+            {
+                return _loadedDatabasePath;
+            }
+            
+            return Path.GetRelativePath(Application.dataPath, _loadedDatabasePath);
+        }
+
         public static void LoadDatabase(string databaseName)
         {
             _loadedDatabasePath = Application.streamingAssetsPath + _databaseFolder + databaseName;
@@ -189,7 +199,7 @@ namespace Quizly
 
             if (overwrite)
             {
-                
+                queryString = "INSERT OR REPLACE INTO ";
             }
             else
             {
@@ -199,6 +209,13 @@ namespace Quizly
             switch (toSave)
             {
                 case Quiz save:
+                    if (FindMatching(Table.Quizzes, new Dictionary<string, string>(){{"name", save.quizName}}).Count > 0)
+                    {
+#if UNITY_EDITOR
+                        Debug.LogError("Trying to save quiz with duplicate name.");
+#endif
+                        return; 
+                    }
                     queryString += $"{Table.Quizzes.ToString().ToLower()} ('name', 'time', 'questions') VALUES (";
                     queryString += $"'{save.quizName}', '{save.time}', '{JsonUtility.ToJson(save.questionSet)}');";
                     
@@ -211,21 +228,55 @@ namespace Quizly
                     break;
                 
                 case Question question:
+                    string answerJson = JsonUtility.ToJson(question.answerSet);
+                    
+                    if (!overwrite && FindMatching(Table.Questions, 
+                            new Dictionary<string, string>(){{"question_text", question.question}, {"answer_set", answerJson}}).Count > 0)
+                    {
+#if UNITY_EDITOR
+                        Debug.LogError("Trying to save question that already exists.");
+#endif
+                        return; 
+                    }
+                    
                     queryString += $"{Table.Questions.ToString().ToLower()} ('question_text', 'answer_set', 'category_id', 'difficulty', 'tip') VALUES (";
-                    queryString += $"'{question.question}', '{JsonUtility.ToJson(question.answerSet)}', '{question.categoryID}', '{question.difficulty}', '{question.tip}');";
+                    queryString += $"'{question.question}', '{answerJson}', '{question.categoryID}', '{question.difficulty}', '{question.tip}');";
                     break;
                 
                 case QuestionWeighting weight:
+                    if (!overwrite && FindMatching(Table.Weightings, 
+                            new Dictionary<string, string>(){{"quiz_id", weight.quizID.ToString()}, {"question_id", weight.questionID.ToString()}}).Count > 0)
+                    {
+#if UNITY_EDITOR
+                        Debug.LogError("Trying to save weighting that already exists.");
+#endif
+                        return; 
+                    }
                     queryString += $"{Table.Weightings.ToString().ToLower()} ('quiz_id', 'question_id', 'weight') VALUES (";
                     queryString += $"'{weight.quizID}', '{weight.questionID}', '{weight.weight}');";
                     break;
                 
                 case User user:
+                    if (!overwrite && FindMatching(Table.Users, new Dictionary<string, string>(){{"username", user.username}}).Count > 0)
+                    {
+#if UNITY_EDITOR
+                        Debug.LogError("Trying to save user that already exists.");
+#endif
+                        return; 
+                    }
                     queryString += $"{Table.Users.ToString().ToLower()} ('username', 'password') VALUES (";
                     queryString += $"'{user.username}', '{user.password}');";
                     break;
                 
                 case string category:
+                    //check it doesnt already exist 
+                    if (!overwrite && FindMatching(Table.Categories, new Dictionary<string, string>(){{"name", category}}).Count > 0)
+                    {
+#if UNITY_EDITOR
+                        Debug.LogError("Trying to save category that already exists.");
+#endif
+                        return; 
+                    }
                     queryString += $"{Table.Categories.ToString().ToLower()} ('name') VALUES ('{category}');";
                     break;
             }
@@ -292,6 +343,18 @@ namespace Quizly
             }
 
             return true;
+        }
+
+        public static void ClearDatabase(string databaseName)
+        {
+            if (!databaseName.Contains('.'))
+            {
+                databaseName += ".sql";
+            }
+
+            string queryString = "";
+            
+            SendQuery(queryString, Application.streamingAssetsPath + _databaseFolder + databaseName);
         }
 
         #endregion

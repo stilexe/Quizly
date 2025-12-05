@@ -8,6 +8,7 @@ namespace Quizly
 {
     public class CreateQuestion : EditorWindow
     {
+        private Vector2 _scrollPos;
         public enum QuestionType
         {
             None,
@@ -31,17 +32,22 @@ namespace Quizly
         public static void Create()
         {
             CreateQuestion win = GetWindow<CreateQuestion>();
+            
+            win.titleContent = new GUIContent("Create Question");
         }
 
         private void OnGUI()
         {
-            GUILayout.Label("New Question");
+            GUILayout.Label("New Question", StyleLibrary.Header2Style);
+            
+            _scrollPos = GUILayout.BeginScrollView(_scrollPos);
+            
+            GUILayout.Space(5);
             
             //category drop down
             GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
             GUILayout.Label("Category");
-
-
             if (EditorGUILayout.DropdownButton(new GUIContent(_categoryName), FocusType.Keyboard))
             {
                 GenericMenu categoryMenu = new GenericMenu();
@@ -57,22 +63,37 @@ namespace Quizly
                 
                 categoryMenu.ShowAsContext();
             }
-            
+            GUILayout.Space(10);
             GUILayout.EndHorizontal();
+            
+            GUILayout.Space(15);
             
             //difficulty slider
             GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
             GUILayout.Label("Difficulty");
             _difficulty = EditorGUILayout.Slider(_difficulty, 1, 5);
             _difficulty = Mathf.Round(_difficulty);
+            GUILayout.Space(10);
             GUILayout.EndHorizontal();
             
+            GUILayout.Space(15);
+            
             //question text 
-            GUILayout.Label("Question");
-            _questionText = EditorGUILayout.TextField(_questionText);
+            GUILayout.Label("Question", StyleLibrary.Header3Style);
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            _questionText = EditorGUILayout.TextField(_questionText, GUILayout.Width(position.width *.85f));
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            
+            
+            GUILayout.Label("Answer", StyleLibrary.Header3Style);
 
             //answer type dropdown 
             GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
             GUILayout.Label("Answer Type");
 
             if (EditorGUILayout.DropdownButton(new GUIContent(_questionType.ToString()), FocusType.Keyboard))
@@ -87,8 +108,10 @@ namespace Quizly
                 
                 _answerMenu.ShowAsContext();
             }
-            
+            GUILayout.Space(10);
             GUILayout.EndHorizontal();
+            
+            GUILayout.Space(15);
 
             //answer section
             switch (_questionType)
@@ -97,10 +120,11 @@ namespace Quizly
                 case QuestionType.TrueOrFalse:
                     
                     GUILayout.BeginHorizontal();
-
+                    GUILayout.FlexibleSpace();
                     _true = EditorGUILayout.Toggle("True", _true);
+                    GUILayout.Space(25);
                     _false = EditorGUILayout.Toggle("False", _false);
-                
+                    GUILayout.FlexibleSpace();
                     GUILayout.EndHorizontal();
                     
                     break;
@@ -109,13 +133,15 @@ namespace Quizly
                 case QuestionType.MultipleChoice:
                     
                     GUILayout.BeginHorizontal();
-
+                    GUILayout.Space(10);
                     GUILayout.Label("Answer");
                     _newAnswer = EditorGUILayout.TextField(_newAnswer);
-                    
+                    GUILayout.Space(10);
                     GUILayout.EndHorizontal();
-
-                    if (GUILayout.Button("Add"))
+                    GUILayout.Space(5);
+                    GUILayout.BeginHorizontal();
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("Add", GUILayout.Width(45), GUILayout.Height(25)))
                     {
                         _newAnswer = _newAnswer.Trim();
                         
@@ -127,6 +153,10 @@ namespace Quizly
                         _answers.Add(_newAnswer, false);
                         _newAnswer = "";
                     }
+                    GUILayout.Space(10);
+                    GUILayout.EndHorizontal();
+                    
+                    GUILayout.Space(15);
                     
                     List<string> toRemove = new List<string>();
                     Dictionary<string, bool> toggleChanges = new Dictionary<string, bool>();
@@ -134,18 +164,24 @@ namespace Quizly
                     foreach (KeyValuePair<string, bool> answer in _answers)
                     {
                         GUILayout.BeginHorizontal();
-
+                        GUILayout.Space(35);
                         toggleChanges.Add(answer.Key, answer.Value);
                         
                         toggleChanges[answer.Key] = EditorGUILayout.Toggle(toggleChanges[answer.Key]);
                         GUILayout.Label(answer.Key);
 
-                        if (GUILayout.Button("-"))
+                        if (GUILayout.Button("-", GUILayout.Width(25)))
                         {
                             toRemove.Add(answer.Key);
+                            GUILayout.EndHorizontal();
+                        }
+                        else
+                        {
+                            GUILayout.Space(35);
+                            GUILayout.EndHorizontal();
                         }
                         
-                        GUILayout.EndHorizontal();
+                        GUILayout.Space(5);
                     }
 
                     foreach (string key in toRemove)
@@ -162,29 +198,50 @@ namespace Quizly
                     break;
             }
 
+            GUILayout.Space(15);
             //tip
-            GUILayout.Label("Answer Explanation");
-            _explanationText = EditorGUILayout.TextField(_explanationText);
-
-            //buttons 
             GUILayout.BeginHorizontal();
-            
-            if (GUILayout.Button("Add to Open Quiz"))
-            {
-                SaveQuestion();
-                
-                //check if a quiz is open 
-                //send to quiz window
-            }
-
-            if (GUILayout.Button("Save Question"))
-            {
-                SaveQuestion();
-            }
-            
+            GUILayout.Space(10);
+            GUILayout.Label("Answer Explanation");
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            _explanationText = EditorGUILayout.TextField(_explanationText, GUILayout.Width(position.width *.85f));
+            GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             
-            GUILayout.Label(_errorMessage);
+            GUILayout.Space(25);
+
+            #region SaveButtons
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Add to Open Quiz", GUILayout.Width(position.width * .45f), GUILayout.Height(25)))
+            {
+                SaveQuestion();
+                GUILayout.EndHorizontal();
+
+                //check if a quiz is open 
+                //send to quiz window
+                //GUILayout.EndHorizontal();
+            }
+            else if (GUILayout.Button("Save Question", GUILayout.Width(position.width * .45f), GUILayout.Height(25)))
+            {
+                SaveQuestion();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+
+            #endregion
+            
+            GUILayout.EndScrollView();
+            
+            GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
         }
 
         private void SetQuestionType(object type)

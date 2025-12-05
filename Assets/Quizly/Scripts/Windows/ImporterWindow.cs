@@ -14,29 +14,45 @@ namespace Quizly
         public static void Create()
         {
             ImporterWindow win = GetWindow<ImporterWindow>();
+            win.titleContent = new GUIContent("CSV Importer");
         }
         private void OnGUI()
         {
+            GUILayout.Label("Import CSVs", StyleLibrary.Header2Style);
+            GUILayout.Space(10);
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
             //export template buttons 
-            if (GUILayout.Button("Export Templates"))
+            if (GUILayout.Button("Export Templates", GUILayout.Width(position.width * .85f)))
             {
                 CSVExporter.ExportTemplates();
+                GUILayout.EndHorizontal();
             }
+            else
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+            
+            GUILayout.Space(15);
 
-            GUILayout.Label("Import Data");
+            GUILayout.Label("Import Data", StyleLibrary.Header3Style);
+            
             GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
             GUILayout.Label("File: ");
             
             //select file section 
             _toImport = EditorGUILayout.ObjectField(_toImport, typeof(Object) , false);
-            
+            GUILayout.Space(15);
             GUILayout.EndHorizontal();
             
             _assetPath = AssetDatabase.GetAssetPath(_toImport);
             
             if (!string.IsNullOrEmpty(_assetPath))
             {
-                if (_assetPath.Split('.')[1] != "csv")
+                if (!_assetPath.Contains('.') || _assetPath.Split('.')[1] != "csv")
                 {
                     _errorMessage = "Must be CSV file.";
                     _assetPath = "";
@@ -52,17 +68,29 @@ namespace Quizly
                 GUILayout.Label(_assetPath);
                 GUILayout.EndHorizontal();
             }
+            
+            GUILayout.Space(20);
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
                 
             //import button 
-            if (GUILayout.Button("Import"))
+            if (GUILayout.Button("Import", GUILayout.Width(position.width * .85f), GUILayout.Height(25)))
             {
                 if (_toImport is not null)
                 {
                     CSVImporter.ImportCsv(Directory.GetCurrentDirectory() +"/"+ AssetDatabase.GetAssetPath(_toImport));
                 }
+                
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
             
-            GUILayout.Label(_errorMessage);
+            GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
         }
     }
 }

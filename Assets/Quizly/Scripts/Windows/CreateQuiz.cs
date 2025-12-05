@@ -9,7 +9,9 @@ namespace Quizly
     {
         private string _errorMessage; 
         private bool _timed;
-        private bool _updateDisplay; 
+        private bool _updateDisplay;
+
+        private Vector2 _scrollPos, _searchScroll, _questionScroll;
 
         private string _searchBar;
         private List<Question> _questionDisplay = new List<Question>(); 
@@ -21,17 +23,20 @@ namespace Quizly
         public static void Create()
         {
             CreateQuiz win = GetWindow<CreateQuiz>();
+            
+            win.titleContent = new GUIContent("Create Quiz");
         }
 
         private void OnGUI()
         {
-            GUILayout.Label("New Quiz");
+            GUILayout.Label("New Quiz", StyleLibrary.Header2Style);
             
+            _scrollPos = GUILayout.BeginScrollView(_scrollPos);
+            GUILayout.Label("Details", StyleLibrary.Header3Style);
             //quiz name 
             GUILayout.BeginHorizontal();
-            
+            GUILayout.Space(10);
             GUILayout.Label("Quiz Name");
-
             if (_newQuiz is null)
             {
                 _newQuiz = new Quiz();
@@ -39,27 +44,38 @@ namespace Quizly
                 _newQuiz.questionSet = new QuestionSet();
                 _newQuestions = new Dictionary<Question, int>();
             }
-            
             _newQuiz.quizName = GUILayout.TextField(_newQuiz.quizName);
-            
+            GUILayout.Space(10);
             GUILayout.EndHorizontal();
             
             //timer
             GUILayout.BeginHorizontal();
-            
+            GUILayout.Space(10);
             GUILayout.Label("Timer");
             _timed = EditorGUILayout.Toggle(_timed);
 
             if (_timed)
             {
                 GUILayout.Label("Minutes");
-                _newQuiz.time = EditorGUILayout.FloatField(_newQuiz.time);
+                _newQuiz.time = EditorGUILayout.FloatField(_newQuiz.time, GUILayout.Width(60));
             }
-            
+            GUILayout.Space(10);
             GUILayout.EndHorizontal();
             
+            GUILayout.Label("Questions", StyleLibrary.Header3Style);
             //adding questions 
-            GUILayout.Label("Add Questions");
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            GUILayout.Label("Add Questions", StyleLibrary.Header4Style);
+            
+            if (GUILayout.Button("Create New", GUILayout.Width(100)))
+            {
+                CreateQuestion.Create();
+            }
+            GUILayout.Space(10);
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
 
             if (_questionDisplay.Count == 0 || _questionDisplay is null)
             {
@@ -68,17 +84,22 @@ namespace Quizly
 
             //search bar 
             GUILayout.BeginHorizontal();
+            GUILayout.Space(25);
             GUILayout.Label("Search: ");
             _searchBar = GUILayout.TextField(_searchBar);
-            if (GUILayout.Button("Search"))
+            GUILayout.Space(5);
+            if (GUILayout.Button("Search", GUILayout.Width(85)))
             {
                 _updateDisplay = true;
                 GUILayout.EndHorizontal();
             }
             else
             {
+                GUILayout.Space(10);
                 GUILayout.EndHorizontal();
             }
+            
+            GUILayout.Space(15);
 
             //show all questions in the display list
             //list them with an add button 
@@ -86,37 +107,46 @@ namespace Quizly
             {
                 UpdateQuestionDisplay();    
             }
-            
-            foreach (Question question in _questionDisplay)
-            {
-                GUILayout.BeginHorizontal();
-                
-                GUILayout.Label(question.question);
 
-                //add to quiz question set if button clicked
-                if (GUILayout.Button("+"))
-                {
-                    _newQuestions.Add(question, 0);
-                    _updateDisplay = true;
-                    GUILayout.EndHorizontal();
-                }
-                else
-                {
-                    GUILayout.EndHorizontal();
-                }
-            }
-            
-            if (GUILayout.Button("New Question"))
+            if (_questionDisplay is not null && _questionDisplay.Count > 0)
             {
-                CreateQuestion.Create();
+                _searchScroll = GUILayout.BeginScrollView(_searchScroll, GUILayout.Height(75));
+                foreach (Question question in _questionDisplay)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(35);
+                
+                    GUILayout.Label(question.question);
+
+                    //add to quiz question set if button clicked
+                    if (GUILayout.Button("+", GUILayout.Width(20)))
+                    {
+                        _newQuestions.Add(question, 0);
+                        _updateDisplay = true;
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        GUILayout.Space(35);
+                        GUILayout.EndHorizontal();
+                    }
+                    
+                    GUILayout.Space(5);
+                }
+                GUILayout.EndScrollView();
             }
                 
             //Display the current questions
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            GUILayout.Label("Added Questions", StyleLibrary.Header4Style);
+            GUILayout.EndHorizontal();
             //headers
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Question");
-            GUILayout.Label("Difficulty");
-            GUILayout.Label("Weight");
+            GUILayout.Space(25);
+            GUILayout.Label("Question", StyleLibrary.Bold);
+            GUILayout.Label("Difficulty", StyleLibrary.Bold);
+            GUILayout.Label("Weight", StyleLibrary.Bold);
             GUILayout.EndHorizontal();
             
             //display questions that have been added to quiz 
@@ -125,38 +155,66 @@ namespace Quizly
             {
                 toIterate.Add(q);
             }
-            foreach (Question question in toIterate)
-            {
-                GUILayout.BeginHorizontal();
-                
-                GUILayout.Label(question.question);
-                GUILayout.Label(question.difficulty.ToString());
-                
-                _newQuestions[question] = EditorGUILayout.IntField(_newQuestions[question]);
 
-                if (GUILayout.Button("-"))
-                {
-                    _newQuestions.Remove(question);
-                    GUILayout.EndHorizontal();
-                }
-                else
-                {
-                    GUILayout.EndHorizontal();
-                }
-            }
-
-            if (GUILayout.Button("Save Quiz"))
+            if (toIterate.Count > 0)
             {
-                SaveQuiz();
+                _questionScroll = GUILayout.BeginScrollView(_questionScroll, GUILayout.Height(85));
+                foreach (Question question in toIterate)
+                {
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(30);
+                    GUILayout.Label(question.question);
+                    GUILayout.Label(question.difficulty.ToString());
+                
+                    _newQuestions[question] = EditorGUILayout.IntField(_newQuestions[question], GUILayout.Width(65));
+
+                    GUILayout.Space(15);
+                    
+                    if (GUILayout.Button("-", GUILayout.Width(20)))
+                    {
+                        _newQuestions.Remove(question);
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        GUILayout.Space(35);
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                
+                GUILayout.EndScrollView();
             }
             
-            GUILayout.Label(_errorMessage);
+            GUILayout.Space(15);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Save Quiz", GUILayout.Width(position.width * .85f), GUILayout.Height(30)))
+            {
+                SaveQuiz();
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+            
+            GUILayout.EndScrollView();
+            GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
 
         }
 
         private void UpdateQuestionDisplay()
         {
             _questionDisplay.Clear();
+
+            if (!DBManager.DatabaseLoaded())
+            {
+                _errorMessage = "No database loaded";
+                return;
+            }
+            
             List<object> toDisplay = new List<object>();
             
             if (string.IsNullOrEmpty(_searchBar))
@@ -170,10 +228,13 @@ namespace Quizly
                 
                 toDisplay = DBManager.FindMatching(DBManager.Table.Questions, displaySearch, false);
             }
-            
-            foreach (object o in toDisplay)
+
+            if (toDisplay is not null && toDisplay.Count > 0)
             {
-                _questionDisplay.Add((Question)o);
+                foreach (object o in toDisplay)
+                {
+                    _questionDisplay.Add((Question)o);
+                }
             }
             
             List<Question> toRemove = new List<Question>();

@@ -11,22 +11,30 @@ public class CreateGameSettings : EditorWindow
     private string _saveFolderPath = "";
     private string _settingsName = "";
     
-    [MenuItem("Window/Quizly/Create Game Settings")]
     public static void Create()
     {
         CreateGameSettings win = GetWindow<CreateGameSettings>();
+        
+        win.titleContent = new GUIContent("Create Settings");
     }
 
     private void OnGUI()
     {
-        GUILayout.Label("Create Game Settings");
+        GUILayout.Label("Create Settings", StyleLibrary.Header2Style);
         
         GUILayout.BeginHorizontal();
+        GUILayout.Space(10);
         GUILayout.Label("Name: ");
         _settingsName = EditorGUILayout.TextField(_settingsName);
+        GUILayout.Space(10);
         GUILayout.EndHorizontal();
-        
+        GUILayout.Space(10);
+        GUILayout.BeginHorizontal();
+        GUILayout.Space(10);
+        GUILayout.Label("Save Folder: ");
         _saveFolder = EditorGUILayout.ObjectField(_saveFolder, typeof(Object) , false);
+        GUILayout.Space(10);
+        GUILayout.EndHorizontal();
         
         _saveFolderPath = AssetDatabase.GetAssetPath(_saveFolder);
             
@@ -44,15 +52,17 @@ public class CreateGameSettings : EditorWindow
             }
                 
             GUILayout.BeginHorizontal();
+            GUILayout.Space(15);
             GUILayout.Label("File Path: ");
             GUILayout.Label(_saveFolderPath);
             GUILayout.EndHorizontal();
         }
         
-        GUILayout.BeginHorizontal();
+        GUILayout.Space(10);
         
+        GUILayout.BeginHorizontal();
+        GUILayout.Space(10);
         GUILayout.Label("Database: ");
-
         if (EditorGUILayout.DropdownButton(new GUIContent(_chosenDatabase), FocusType.Keyboard))
         {
             GenericMenu menu = new GenericMenu();
@@ -64,15 +74,21 @@ public class CreateGameSettings : EditorWindow
             
             menu.ShowAsContext();
         }
-        
+        GUILayout.Space(10);
         GUILayout.EndHorizontal();
         
-        if (GUILayout.Button("Save Settings"))
+        GUILayout.Space(15);
+        
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("Save Settings", GUILayout.Height(30), GUILayout.Width(position.width * .85f)))
         {
             SaveSettings();
         }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
         
-        GUILayout.Label(_errorMessage);
+        GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
     }
 
     private void SaveSettings()

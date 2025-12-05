@@ -166,7 +166,7 @@ namespace Quizly
             {
                 quizID = _loadedQuiz.id,
                 userID = DBManager.FindID(DBManager.Table.Users, "username", UserManager.GetLoggedIn().username),
-                date = System.DateTime.Today.ToString("DD/MM/YYYY"),
+                date = System.DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
                 score = score,
                 submissionSet = new SubmissionSet() {submissions = submissionObjects}
             };
