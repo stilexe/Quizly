@@ -1,20 +1,26 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using Quizly;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class QuestionDisplay : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI questionText;
     [SerializeField] private GameObject answerHolder;
     [SerializeField] private GameObject answerDisplayPrefab;
-    [SerializeField] private TextMeshProUGUI errorMessage; 
+    [SerializeField] private TextMeshProUGUI errorMessage;
+    [SerializeField] private TextMeshProUGUI timeText;
     
     private List<GameObject> _answerDisplays = new List<GameObject>();
     private List<Toggle> _answerToggles = new List<Toggle>();
     private List<Toggle> _onToggles = new List<Toggle>();
     private int _maxAnswers;
+
+    private float _secondsLeft;
+    private bool _timed; 
 
     private void OnEnable()
     {
@@ -34,6 +40,31 @@ public class QuestionDisplay : MonoBehaviour
     private void Start()
     {
         ShowQuestion();
+
+        if (QuizManager.QuizTime() > 0)
+        {
+            _timed = true;
+            _secondsLeft = QuizManager.QuizTime() * 60;
+        }
+        else
+        {
+            timeText.text = "";
+        }
+    }
+
+    private void Update()
+    {
+        if (_timed)
+        {
+            _secondsLeft -= Time.deltaTime;
+            timeText.text = ((int)_secondsLeft).ToString();
+
+            if (_secondsLeft <= 0)
+            {
+                //game over 
+                QuizManager.TimeUp();
+            }
+        }
     }
 
     private void ShowQuestion()

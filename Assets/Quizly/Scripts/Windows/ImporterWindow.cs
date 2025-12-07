@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Quizly
 {
@@ -10,12 +12,13 @@ namespace Quizly
         private string _assetPath; 
         private string _errorMessage; 
         
-        [MenuItem("Window/Quizly/Importer")]
+        [MenuItem("Window/Quizly/CSV/Importer")]
         public static void Create()
         {
             ImporterWindow win = GetWindow<ImporterWindow>();
             win.titleContent = new GUIContent("CSV Importer");
         }
+        
         private void OnGUI()
         {
             GUILayout.Label("Import CSVs", StyleLibrary.Header2Style);

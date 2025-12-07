@@ -19,7 +19,7 @@ namespace Quizly
         private Quiz _newQuiz;
         private Dictionary<Question, int> _newQuestions = new Dictionary<Question, int>(); //question and the weighting
         
-        [MenuItem("Window/Quizly/Create Quiz")]
+        [MenuItem("Window/Quizly/Create/Quiz")]
         public static void Create()
         {
             CreateQuiz win = GetWindow<CreateQuiz>();
@@ -203,6 +203,12 @@ namespace Quizly
             GUILayout.EndScrollView();
             GUILayout.Label(_errorMessage, StyleLibrary.BottomMessage);
 
+        }
+
+        public void AddQuestion(Question question)
+        {
+            _newQuestions.Add(question, 0);
+            _errorMessage = "New question added from other window";
         }
 
         private void UpdateQuestionDisplay()

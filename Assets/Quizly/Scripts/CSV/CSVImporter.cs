@@ -63,7 +63,6 @@ namespace Quizly
                     foreach (string line in lineStrings)
                     {
                         string[] lineArray = line.Split(',');
-                        int catID = 0;
 
                         if (DBManager.FindMatching(DBManager.Table.Categories, 
                                 new Dictionary<string, string>() {{"name", lineArray[2]}}).Count == 0) //if category doesnt exist

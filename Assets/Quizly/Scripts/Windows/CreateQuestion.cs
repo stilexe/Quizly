@@ -17,7 +17,7 @@ namespace Quizly
         }
 
         private Question _newQuestion = new Question(); 
-        private string _questionText, _explanationText, _newAnswer, _categoryName;
+        private string _questionText, _explanationText, _newAnswer, _categoryName = "";
         private Dictionary<string, bool> _answers = new Dictionary<string, bool>();
         private bool _true, _false;
         private QuestionType _questionType;
@@ -28,7 +28,7 @@ namespace Quizly
 
         private GenericMenu _answerMenu; 
         
-        [MenuItem("Window/Quizly/Create Question")]
+        [MenuItem("Window/Quizly/Create/Question")]
         public static void Create()
         {
             CreateQuestion win = GetWindow<CreateQuestion>();
@@ -220,11 +220,19 @@ namespace Quizly
             if (GUILayout.Button("Add to Open Quiz", GUILayout.Width(position.width * .45f), GUILayout.Height(25)))
             {
                 SaveQuestion();
-                GUILayout.EndHorizontal();
 
                 //check if a quiz is open 
-                //send to quiz window
-                //GUILayout.EndHorizontal();
+                if (HasOpenInstances<CreateQuiz>())
+                {
+                    int questionID = int.Parse(DBManager.FindValues(DBManager.Table.Questions, "id")[^1]);
+                    GetWindow<CreateQuiz>().AddQuestion((Question)DBManager.SearchWithID(DBManager.Table.Questions, questionID));
+                }
+                else
+                {
+                    _errorMessage = "No quiz open.";
+                }
+                
+                GUILayout.EndHorizontal();
             }
             else if (GUILayout.Button("Save Question", GUILayout.Width(position.width * .45f), GUILayout.Height(25)))
             {

@@ -34,7 +34,7 @@ namespace Quizly
             }},
             { Table.Results, new List<string>()
             {
-                "id INTEGER PRIMARY KEY UNIQUE", "quiz_id INTEGER NOT NULL", "user_id INTEGER NOT NULL", "date TEXT NOT NULL", "answers TEXT NOT NULL"
+                "id INTEGER PRIMARY KEY UNIQUE", "quiz_id INTEGER NOT NULL", "user_id INTEGER NOT NULL", "score INTEGER NOT NULL", "date TEXT NOT NULL", "answers TEXT NOT NULL"
             }},
             { Table.Categories, new List<string>()
             {
@@ -160,6 +160,18 @@ namespace Quizly
             string savePath = _databaseFolder + "reference_file.txt"; 
         }
 
+        public static List<Table> GetTables()
+        {
+            List<Table> tables = new List<Table>();
+
+            foreach (Table table in TableHeaders.Keys)
+            {
+                tables.Add(table);
+            }
+            
+            return tables;
+        }
+
         public static List<string> GetDatabaseNames()
         {
             List<string> databaseNames = new List<string>();
@@ -209,22 +221,33 @@ namespace Quizly
             switch (toSave)
             {
                 case Quiz save:
-                    if (FindMatching(Table.Quizzes, new Dictionary<string, string>(){{"name", save.quizName}}).Count > 0)
+                    if (FindMatching(Table.Quizzes, new Dictionary<string, string>(){{"name", save.quizName}}).Count > 0 && !overwrite)
                     {
 #if UNITY_EDITOR
                         Debug.LogError("Trying to save quiz with duplicate name.");
 #endif
                         return; 
                     }
-                    queryString += $"{Table.Quizzes.ToString().ToLower()} ('name', 'time', 'questions') VALUES (";
+                    
+                    queryString += $"{Table.Quizzes.ToString().ToLower()} (";
+
+                    if (save.id != 0)
+                    {
+                        queryString += "'id',";
+                    }
+                    queryString += "'name', 'time', 'questions') VALUES (";
+                    if (save.id != 0)
+                    {
+                        queryString += $"'{save.id}',";
+                    }
                     queryString += $"'{save.quizName}', '{save.time}', '{JsonUtility.ToJson(save.questionSet)}');";
                     
                     //save weightings 
                     break;
                 
                 case Result results:
-                    queryString += $"{Table.Results.ToString().ToLower()} ('quiz_id', 'user_id', 'date', 'answers') VALUES (";
-                    queryString += $"{results.quizID}, {results.userID}, '{results.date}', '{JsonUtility.ToJson(results.submissionSet)}');";
+                    queryString += $"{Table.Results.ToString().ToLower()} ('quiz_id', 'user_id', 'date', 'score', 'answers') VALUES (";
+                    queryString += $"{results.quizID}, {results.userID}, '{results.date}', '{results.score}', '{JsonUtility.ToJson(results.submissionSet)}');";
                     break;
                 
                 case Question question:
@@ -238,8 +261,16 @@ namespace Quizly
 #endif
                         return; 
                     }
-                    
-                    queryString += $"{Table.Questions.ToString().ToLower()} ('question_text', 'answer_set', 'category_id', 'difficulty', 'tip') VALUES (";
+                    queryString += $"{Table.Questions.ToString().ToLower()} (";
+                    if (question.id != 0)
+                    {
+                        queryString += "'id',";
+                    }
+                    queryString += "'question_text', 'answer_set', 'category_id', 'difficulty', 'tip') VALUES (";
+                    if (question.id != 0)
+                    {
+                        queryString += $"'{question.id}',";
+                    }
                     queryString += $"'{question.question}', '{answerJson}', '{question.categoryID}', '{question.difficulty}', '{question.tip}');";
                     break;
                 
@@ -264,7 +295,16 @@ namespace Quizly
 #endif
                         return; 
                     }
-                    queryString += $"{Table.Users.ToString().ToLower()} ('username', 'password') VALUES (";
+                    queryString += $"{Table.Users.ToString().ToLower()} (";
+                    if (user.id != 0)
+                    {
+                        queryString += "'id',";
+                    }
+                    queryString += "'username', 'password') VALUES (";
+                    if (user.id != 0)
+                    {
+                        queryString += $"'{user.id}',";
+                    }
                     queryString += $"'{user.username}', '{user.password}');";
                     break;
                 
@@ -361,6 +401,57 @@ namespace Quizly
 
         #region Search Functions
 
+        public static int TotalMatchingResults(Table table, Dictionary<string, string> columnValues = null, bool exact = true, string filePath = null)
+        {
+            if (filePath is null && !DatabaseLoaded())
+            {
+#if UNITY_EDITOR
+                Debug.LogError("No database loaded.");
+#endif
+                return 0; 
+            }
+            
+            string queryString = $"SELECT * FROM {table.ToString().ToLower()}";
+
+            if (columnValues is not null && columnValues.Count > 0)
+            {
+                queryString += " WHERE";
+                int i = 0;
+                
+                foreach (KeyValuePair<string, string> pair in columnValues)
+                {
+                    if (i > 0)
+                    {
+                        queryString += " AND";
+                    }
+                
+                    queryString += $" {pair.Key} ";
+                
+                    if(!exact)
+                    {
+                        queryString += $"LIKE '%{pair.Value}%'";
+                    }
+                    else
+                    {
+                        if(float.TryParse(pair.Value, out float f)) //if number dont put quotes around 
+                        {
+                            queryString += $"= {f}";
+                        }
+                        else
+                        {
+                            queryString += $"= '{pair.Value}'";
+                        }
+                    }
+
+                    i++;
+                }
+            }
+
+            queryString += ";";
+            
+            return ResultTotal(queryString, filePath);
+        }
+
         public static object SearchWithID(Table table, int id, string filePath = null)
         {
             if (filePath is null && !DatabaseLoaded())
@@ -374,6 +465,21 @@ namespace Quizly
             string queryString = $"SELECT * FROM {table.ToString().ToLower()} WHERE id = {id.ToString()}";
             
             return ObjectQuery(table, queryString, filePath)[0];
+        }
+
+        public static string FindValueWithID(Table table, string columnToReturn, int id, string filePath = null)
+        {
+            if (filePath is null && !DatabaseLoaded())
+            {
+#if UNITY_EDITOR
+                Debug.LogError("No database loaded.");
+#endif
+                return null; 
+            }
+            
+            string queryString = $"SELECT {columnToReturn} FROM {table.ToString().ToLower()} WHERE id = {id.ToString()}";
+            
+            return SearchQuery(queryString, filePath)[0];
         }
 
         public static int FindID(Table table, string columnToSearch, string columnValue, string filePath = null)
@@ -401,6 +507,36 @@ namespace Quizly
 
             return id; 
         }
+
+        public static int FindID(Table table, Dictionary<string,string> searchValues, string filePath = null)
+        {
+            if (filePath is null && !DatabaseLoaded())
+            {
+#if UNITY_EDITOR
+                Debug.LogError("No database loaded.");
+#endif
+                return 0; 
+            }
+            
+            string queryString = $"SELECT id FROM {table.ToString().ToLower()} WHERE ";
+
+            int i = 0;
+
+            foreach (string key in searchValues.Keys)
+            {
+                if (i > 0)
+                {
+                    queryString += " AND ";
+                }
+                
+                queryString += $"{key} = '{searchValues[key]}'";
+                i++;
+            }
+
+            queryString += ";";
+
+            return int.Parse(SearchQuery(queryString, filePath)[0]); 
+        }
         
         public static List<object> FindMatching(Table table, Dictionary<string, string> columnValues = null, bool exact = true, string filePath = null)
         {
@@ -414,7 +550,7 @@ namespace Quizly
             
             string queryString = $"SELECT * FROM {table.ToString().ToLower()}";
 
-            if (columnValues is not null)
+            if (columnValues is not null && columnValues.Count > 0)
             {
                 queryString += " WHERE";
                 int i = 0;
@@ -478,7 +614,7 @@ namespace Quizly
 
                 if (pair.Value.Count > 1) //if more than one value to search for 
                 {
-                    queryString += "IN (";
+                    queryString += " IN (";
                     
                     foreach (string s in pair.Value)
                     {
@@ -532,9 +668,9 @@ namespace Quizly
         /// </summary>
         private static void SendQuery(string query, string filePath)
         {
-#if UNITY_EDITOR
-            Debug.Log(query);
-#endif
+// #if UNITY_EDITOR
+//             Debug.Log(query);
+// #endif
 
             if (filePath is null)
             {
@@ -557,9 +693,9 @@ namespace Quizly
         /// </summary>
         private static List<string> SearchQuery(string query, string filePath)
         {
-#if UNITY_EDITOR
-            Debug.Log(query);
-#endif
+// #if UNITY_EDITOR
+//             Debug.Log(query);
+// #endif
             
             if (filePath is null)
             {
@@ -599,9 +735,9 @@ namespace Quizly
         /// </summary>
         private static List<object> ObjectQuery(Table table, string queryString, string filePath)
         {
-#if UNITY_EDITOR
-            Debug.Log(queryString);
-#endif
+// #if UNITY_EDITOR
+//             Debug.Log(queryString);
+// #endif
 
             if (filePath is null)
             {
@@ -609,13 +745,18 @@ namespace Quizly
             }
             
             //connect and send query 
-            SQLiteConnection connection = GetConnection(_loadedDatabasePath);
+            SQLiteConnection connection = GetConnection(filePath);
             connection.Open();
             SQLiteCommand command = connection.CreateCommand();
             command.CommandType = CommandType.Text;
             command.CommandText = queryString;
             SQLiteDataReader reader = command.ExecuteReader();
             List<object> results = new List<object>();
+
+            if (reader.FieldCount.Equals(0))
+            {
+                return results;
+            }
 
             while (reader.Read())
             {
@@ -657,7 +798,7 @@ namespace Quizly
                         {
                             questionID = int.Parse(reader["question_id"].ToString()),
                             quizID = int.Parse(reader["quiz_id"].ToString()),
-                            weight = int.Parse(reader["weighting"].ToString()),
+                            weight = int.Parse(reader["weight"].ToString()),
                         };
                         
                         results.Add(weightAdd);
@@ -666,6 +807,7 @@ namespace Quizly
                     case Table.Users:
                         User userAdd = new User()
                         {
+                            id = int.Parse(reader["id"].ToString()),
                             username = reader["username"].ToString(),
                             password = reader["password"].ToString(),
                         };
@@ -674,6 +816,15 @@ namespace Quizly
                         break; 
                     
                     case Table.Results:
+                        Result resultsAdd = new Result()
+                        {
+                            quizID = int.Parse(reader["quiz_id"].ToString()),
+                            userID = int.Parse(reader["user_id"].ToString()),
+                            score = int.Parse(reader["score"].ToString()),
+                            date = reader["date"].ToString(),
+                            submissionSet = JsonUtility.FromJson<SubmissionSet>(reader["answers"].ToString())
+                        };
+                        results.Add(resultsAdd);
                         break; 
                 }
             }

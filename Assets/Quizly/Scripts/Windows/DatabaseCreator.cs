@@ -13,17 +13,17 @@ namespace Quizly
 
         private Vector2 _scrollPos, _listPos;
         
-        [MenuItem("Window/Quizly/Database Manager")]
+        [MenuItem("Window/Quizly/Database Hub", false, 2)]
         public static void Create()
         {
             DatabaseCreator win = GetWindow<DatabaseCreator>();
             
-            win.titleContent = new GUIContent("Database Manager");
+            win.titleContent = new GUIContent("Database Hub");
         }
 
         private void OnGUI()
         {
-            GUILayout.Label("Database Manager", StyleLibrary.Header2Style);
+            GUILayout.Label("Database Hub", StyleLibrary.Header2Style);
 
             #region Database Creation
 

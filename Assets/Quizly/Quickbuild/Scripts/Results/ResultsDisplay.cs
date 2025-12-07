@@ -42,8 +42,27 @@ public class ResultsDisplay : MonoBehaviour
         }
         
         quizName.text = QuizManager.QuizName();
+
+        int maxScoreInt = QuizManager.QuizMaxScore();
         score.text = _displaying.score.ToString();
-        maxScore.text = QuizManager.QuizMaxScore().ToString();
+        maxScore.text = maxScoreInt.ToString();
+
+        if (_displaying.score > (maxScoreInt * .75f))
+        {
+            score.color = Color.magenta;
+        }
+        else if(_displaying.score > (maxScoreInt * .5f))
+        {
+            score.color = Color.green;
+        }
+        else if (_displaying.score > (maxScoreInt * .3f))
+        {
+            score.color = Color.yellow;
+        }
+        else
+        {
+            score.color = Color.red;
+        }
 
         for (int i = 0; i < answerDisplays.Count; i++)
         {
@@ -56,6 +75,8 @@ public class ResultsDisplay : MonoBehaviour
                 answerDisplays[i].SetActive(true);
             }
         }
+        
+        //show submitted answers 
 
         for (int i = 0; i < _displaying.submissionSet.submissions.Count; i++)
         {
@@ -66,6 +87,8 @@ public class ResultsDisplay : MonoBehaviour
             
             answerDisplays[i].GetComponent<AnswerSubmissionDisplay>().ShowAnswer(_displaying.submissionSet.submissions[i]);
         }
+        
+        RefreshPastResults();
     }
 
     public void SaveResults()
@@ -73,16 +96,52 @@ public class ResultsDisplay : MonoBehaviour
         DBManager.SaveObject(_displaying);
     }
 
-    public void SeePastResults()
+    public void RefreshPastResults(int userID = 0)
     {
+        Dictionary<string,string> searchDict = new Dictionary<string, string>()
+        {
+            {"quiz_id", QuizManager.QuizID().ToString()},
+        };
         
+        if (userID > 0)
+        {
+            searchDict.Add("user_id", userID.ToString());    
+        }
+        
+        _pastResults.Clear();
+        
+        List<object> pastObjects = DBManager.FindMatching(DBManager.Table.Results,searchDict);
+
+        foreach (object o in pastObjects)
+        {
+            _pastResults.Add((Result)o);
+        }
+        
+        for (int i = 0; i < _pastResultDisplays.Count; i++)
+        {
+            if (i > _pastResults.Count - 1)
+            {
+                _pastResultDisplays[i].SetActive(false);
+            }
+            else
+            {
+                _pastResultDisplays[i].SetActive(true);
+            }
+        }
+        
+        for (int i = 0; i < _pastResults.Count; i++)
+        {
+            if (i > _pastResultDisplays.Count - 1)
+            {
+                _pastResultDisplays.Add(Instantiate(pastResultPrefab, pastResultHolder.transform));
+            }
+            
+            _pastResultDisplays[i].GetComponent<PastResultDisplay>().DisplayResult(_pastResults[i]);
+        }
     }
 
-    public void HidePastResults()
+    public void DisplayMyResults()
     {
-        foreach (GameObject pastResult in _pastResultDisplays)
-        {
-            pastResult.SetActive(false);
-        }
+        RefreshPastResults(UserManager.GetLoggedIn().id);
     }
 }

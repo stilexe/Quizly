@@ -15,7 +15,7 @@ namespace Quizly
         
         private Question _selectedQuestion;
         
-        [MenuItem("Window/Quizly/Questions")]
+        [MenuItem("Window/Quizly/List/Questions")]
         public static void Create()
         {
             QuestionList win = GetWindow<QuestionList>();

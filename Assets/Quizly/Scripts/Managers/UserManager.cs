@@ -48,9 +48,9 @@ namespace Quizly
         /// </summary>
         public static bool CreateUser(string username, string password)
         {
-            #if UNITY_EDITOR
-            Debug.Log($"Creating user {username}");
-            #endif
+            // #if UNITY_EDITOR
+            // Debug.Log($"Creating user {username}");
+            // #endif
             
             if (!CheckUsername(username))
             {
@@ -92,22 +92,6 @@ namespace Quizly
         {
             _loggedIn = null;
             OnUserLogout?.Invoke();
-        }
-
-        public static bool DeleteUser(string username)
-        {
-            Dictionary<string,string> searchValues = new Dictionary<string,string>(){{"username",username}};
-            
-            if (CheckUsername(username))
-            {
-                DBManager.RemoveData(DBManager.Table.Users, DBManager.FindID(DBManager.Table.Users, "username", username));
-                return true; 
-            }
-            
-#if UNITY_EDITOR
-            Debug.Log($"User doesn't exist");
-#endif
-            return false;
         }
     }
 }

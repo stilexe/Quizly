@@ -12,7 +12,7 @@ namespace Quizly
         private List<string> categories = new List<string>();
         private string _errorMessage = "";
     
-        [MenuItem("Window/Quizly/Category Manager")]
+        [MenuItem("Window/Quizly/Create/Category")]
         public static void Create()
         {
             CategoryManager win = GetWindow<CategoryManager>();

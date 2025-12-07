@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 132ee2408e971704d9d975db0553d319, type: 3}
-  m_Name: settings_test
+  m_Name: example settings
   m_EditorClassIdentifier: 
-  databaseName: test_custom.sqlite
+  databaseName: example_base.sqlite

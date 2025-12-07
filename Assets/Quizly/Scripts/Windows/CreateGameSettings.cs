@@ -11,6 +11,7 @@ public class CreateGameSettings : EditorWindow
     private string _saveFolderPath = "";
     private string _settingsName = "";
     
+    [MenuItem("Window/Quizly/Create/Game Settings")]
     public static void Create()
     {
         CreateGameSettings win = GetWindow<CreateGameSettings>();

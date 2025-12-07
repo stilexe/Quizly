@@ -8,7 +8,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
-  - enabled: 1
+  - enabled: 0
     path: Assets/Quizly/Quickbuild/Scenes/CreateUser.unity
     guid: 2009451478bc3af479664659dacd3d36
   - enabled: 1

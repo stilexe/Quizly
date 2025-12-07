@@ -9,7 +9,7 @@ public class MainWindow : EditorWindow
 
     private GUILayoutOption[] _windowButtonOptions;
     
-    [MenuItem("Window/Quizly/Quizly Hub")]
+    [MenuItem("Window/Quizly/Quizly Hub", false, 1)]
     public static void Create()
     {
         MainWindow win = GetWindow<MainWindow>();
@@ -70,16 +70,52 @@ public class MainWindow : EditorWindow
         if (GUILayout.Button("Load Database", GUILayout.Height(30), GUILayout.Width(position.width * .65f)))
         {
             DatabaseCreator.Create();
+            GUILayout.EndHorizontal();
+        }
+        else
+        {
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
         
+        GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
-        GUILayout.EndHorizontal();
+
+        if (GUILayout.Button("Create Game Settings", GUILayout.Height(25), GUILayout.Width(position.width * .55f)))
+        {
+            CreateGameSettings.Create();
+            GUILayout.EndHorizontal();
+        }
+        else
+        {
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
         
         GUILayout.Space(15);
 
         #region Quiz Management Buttons
 
-        GUILayout.Label("Quiz Management", StyleLibrary.Header2Style);
+        GUILayout.Label("Data Management", StyleLibrary.Header2Style);
+        
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        if (GUILayout.Button("All Questions", _windowButtonOptions))
+        {
+            QuestionList.Create();
+            GUILayout.EndHorizontal();
+        }
+        else if (GUILayout.Button("All Quizzes", _windowButtonOptions))
+        {
+            QuizList.Create();
+            GUILayout.EndHorizontal();
+        }
+        else
+        {
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+        }
+        
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         if (GUILayout.Button("Create Question", _windowButtonOptions))
@@ -101,14 +137,9 @@ public class MainWindow : EditorWindow
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         
-        if (GUILayout.Button("Manage Categories", _windowButtonOptions))
+        if (GUILayout.Button("Categories", _windowButtonOptions))
         {
             CategoryManager.Create();
-            GUILayout.EndHorizontal();
-        }
-        else if (GUILayout.Button("Create Game Settings", _windowButtonOptions))
-        {
-            CreateGameSettings.Create();
             GUILayout.EndHorizontal();
         }
         else
@@ -131,7 +162,7 @@ public class MainWindow : EditorWindow
         }
         else if (GUILayout.Button("Export CSVs", _windowButtonOptions))
         {
-            //ExporterWindow.Create(); 
+            ExporterWindow.Create(); 
             GUILayout.EndHorizontal();
         }
         else

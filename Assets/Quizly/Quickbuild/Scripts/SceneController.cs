@@ -24,4 +24,9 @@ public class SceneController : MonoBehaviour
     {
         SceneManager.LoadScene("QuizResults");
     }
+
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
 }

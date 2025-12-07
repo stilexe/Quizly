@@ -19,6 +19,12 @@ public class QuizDisplay : MonoBehaviour
         nameDisplay.text = quiz.quizName;
 
         questionDisplay.text = quiz.questionSet.questionIDs.Count.ToString();
+
+        for (int i = 0; i < QuizManager.QuizDifficulty(quiz); i++)
+        {
+            difficultyDisplay.text += "*";
+        }
+        
         _displayedID = quiz.id;
     }
 

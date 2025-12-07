@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace Quizly
 {
@@ -43,14 +44,27 @@ namespace Quizly
             return _loadedQuiz.quizName; 
         }
 
-        public static int QuizMaxScore()
+        public static int QuizID()
         {
+            return _loadedQuiz.id;
+        }
+
+        public static int QuizMaxScore(int quizID = 0)
+        {
+            if (quizID == 0)
+            {
+                quizID = _loadedQuiz.id;
+            }
+            
             int score = 0;
             Dictionary<string, List<string>> searchDict   = new Dictionary<string, List<string>>();
             List<string> qIDs = new List<string>();
-            searchDict.Add("quiz_id", new List<string> { _loadedQuiz.id.ToString() });
+            searchDict.Add("quiz_id", new List<string> { quizID.ToString() });
 
-            foreach (int id in _loadedQuiz.questionSet.questionIDs)
+            QuestionSet questionSet = JsonUtility.FromJson<QuestionSet>(DBManager.FindValues(DBManager.Table.Quizzes, "questions",
+                new Dictionary<string, List<string>>() {{"id", new List<string>(){quizID.ToString()}}})[0]);
+
+            foreach (int id in questionSet.questionIDs)
             {
                 qIDs.Add(id.ToString());
             }
@@ -62,6 +76,31 @@ namespace Quizly
             }
 
             return score; 
+        }
+
+        public static int QuizDifficulty(Quiz quiz)
+        {
+            int questionNumber = quiz.questionSet.questionIDs.Count;
+            int totalWeight = 0; 
+            
+            foreach (int id in quiz.questionSet.questionIDs)
+            {
+                //find weight and add it to 
+                totalWeight += int.Parse(DBManager.FindValues(DBManager.Table.Weightings, "weight",
+                    new Dictionary<string, List<string>>()
+                    {
+                        {"quiz_id", new List<string>(){quiz.id.ToString()}},
+                        {"question_id", new List<string>(){id.ToString()}}
+                    })[0]);
+            }
+            
+            return totalWeight / questionNumber;
+            
+        }
+
+        public static float QuizTime()
+        {
+            return _loadedQuiz.time;
         }
 
         public static void LoadQuiz(int id)
@@ -86,6 +125,16 @@ namespace Quizly
             NextQuestion();
         }
 
+        public static void TimeUp()
+        {
+            foreach (int id in _unusedQuestions)
+            {
+                _submittedAnswers.Add(id, new List<string>());
+            }
+
+            ScoreQuiz();
+        }
+
         private static void NextQuestion()
         {
             if (_unusedQuestions.Count == 0)
@@ -99,6 +148,54 @@ namespace Quizly
             _unusedQuestions.Remove(_loadedQuestion.id);
             
             OnNewQuestion?.Invoke();
+        }
+
+        public static int ScoreAnswerSubmission(AnswerSubmission submission, int quizID = 0)
+        {
+            if (quizID == 0)
+            {
+                quizID = _loadedQuiz.id;
+            }
+
+            // get the correct answers
+            List<string> correctAnswers = DBManager.FindValues(DBManager.Table.Questions, "answer_set",
+                new Dictionary<string, List<string>>()
+                {
+                    { "id", new List<string>(){submission.questionID.ToString()} }
+                });
+            correctAnswers = JsonUtility.FromJson<AnswerSet>(correctAnswers[0]).correctAnswers;
+
+            int weight = int.Parse(DBManager.FindValues(DBManager.Table.Weightings, "weight",
+                new Dictionary<string, List<string>>()
+                {
+                    { "quiz_id", new List<string>() { quizID.ToString() } },
+                    { "question_id", new List<string>() { submission.questionID.ToString() } }
+                })[0]);
+
+            //see if answer matches 
+            //if only one correct answer 
+            if (submission.isCorrect)
+            {
+                return weight; 
+            }
+            
+            if(correctAnswers.Count > 1) //if more than one correct answer 
+            {
+                int score = 0;
+
+                foreach (string answer in submission.answers) //every answer submitted for the question
+                {
+                    if (correctAnswers.Contains(answer))
+                    {
+                        score += weight /
+                                 correctAnswers.Count; //add division of weight based on correct answers to score 
+                    }
+                }
+
+                return score; 
+            }
+
+            return 0;
         }
 
         private static void ScoreQuiz()
